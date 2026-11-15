@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#eef2ff">
+<title>StudyFlow</title>
+<style>
+:root{--ink:#20243a;--muted:#68708a;--brand:#5965d8;--bg:#f5f6fb;--card:#fff;--line:#e7e9f2;--good:#21845b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN",Meiryo,sans-serif}
+header{background:linear-gradient(135deg,#5965d8,#8188eb);color:white;padding:22px 18px 18px}header h1{margin:0;font-size:24px}header p{margin:6px 0 0;opacity:.9;font-size:13px}
+nav{display:flex;gap:7px;overflow:auto;padding:10px;background:white;position:sticky;top:0;z-index:2;border-bottom:1px solid var(--line)}
+nav button{border:0;background:#f0f1fa;color:#505777;border-radius:20px;padding:9px 13px;white-space:nowrap;font-weight:600}
+nav button.active{background:var(--brand);color:white}
+main{max-width:850px;margin:auto;padding:16px}.page{display:none}.page.active{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:0 0 14px;box-shadow:0 3px 12px #20243a08}
+h2{font-size:18px;margin:0 0 12px}h3{font-size:15px;margin:0 0 8px}
+.row{display:flex;gap:9px;flex-wrap:wrap;align-items:center}.row>*{flex:1}
+label{display:block;font-size:12px;color:var(--muted);margin:9px 0 5px}
+input,select,textarea{width:100%;padding:11px;border:1px solid #dfe2ee;border-radius:10px;background:white;color:var(--ink);font:inherit}
+button.primary,.primary{background:var(--brand);color:white;border:0;border-radius:10px;padding:11px 15px;font-weight:700;cursor:pointer}
+button.secondary{background:#eef0fb;color:#4e58b8;border:0;border-radius:10px;padding:10px 13px;font-weight:650;cursor:pointer}
+button.danger{background:#fff0f0;color:#b33b48;border:0;border-radius:9px;padding:8px 10px}
+button:disabled{opacity:.5}
+.task{display:flex;gap:10px;align-items:flex-start;border-top:1px solid var(--line);padding:12px 0}.task:first-child{border-top:0}
+.task .info{flex:1}.task small{color:var(--muted)}.done .info{text-decoration:line-through;opacity:.55}
+.pill{display:inline-block;background:#eef0ff;color:#505bc0;border-radius:20px;padding:3px 8px;font-size:11px;margin:3px}
+.bigtime{font-size:52px;font-weight:750;text-align:center;letter-spacing:2px;margin:15px 0}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.stat{background:#f5f6ff;padding:13px;border-radius:12px;text-align:center}.stat strong{display:block;font-size:23px}.stat span{font-size:11px;color:var(--muted)}
+.bar{height:9px;background:#eceef6;border-radius:10px;overflow:hidden}.bar i{display:block;height:100%;background:#6874e3;border-radius:10px}
+.days{display:flex;gap:8px;flex-wrap:wrap}.days label{display:flex;align-items:center;gap:4px;background:#f4f5fb;padding:8px;border-radius:9px;margin:0}.days input{width:auto}
+.note{font-size:12px;color:var(--muted);line-height:1.6}.empty{color:var(--muted);font-size:13px;padding:12px 0}
+footer{text-align:center;color:var(--muted);font-size:11px;padding:25px}
+@media(max-width:520px){main{padding:12px}.stats{grid-template-columns:repeat(3,1fr)}.bigtime{font-size:44px}}
+</style>
+</head>
+<body>
+<header><h1>StudyFlow</h1><p>毎日の勉強を、計画的に。</p></header>
+<nav>
+<button class="active" data-page="home">ホーム</button><button data-page="plan">自動計画</button><button data-page="tasks">課題</button><button data-page="timer">タイマー</button><button data-page="stats">学習記録</button><button data-page="settings">設定</button>
+</nav>
+<main>
+<section id="home" class="page active">
+ <div class="card"><h2>今日の学習</h2><div class="stats"><div class="stat"><strong id="todayMinutes">0</strong><span>今日の勉強分</span></div><div class="stat"><strong id="todayDone">0</strong><span>完了した課題</span></div><div class="stat"><strong id="remaining">0</strong><span>残りの課題</span></div></div></div>
+ <div class="card"><h2>今日の課題</h2><div id="todayTasks"></div></div>
+ <div class="card"><h2>ひとこと</h2><p id="quote" class="note">小さな一歩を積み重ねよう。</p></div>
+</section>
+<section id="plan" class="page">
+ <div class="card"><h2>自動学習計画を作る</h2>
+ <label>目標日・テスト日</label><input type="date" id="targetDate">
+ <div class="row"><div><label>1日に勉強できる時間（分）</label><input type="number" id="daily" value="60" min="10" max="600"></div><div><label>1回の学習時間（分）</label><input type="number" id="session" value="25" min="10" max="120"></div></div>
+ <label>勉強する曜日</label><div class="days" id="weekdayChoices"></div>
+ <label>教科・範囲・優先度（1行に1つ）</label><textarea id="subjects" rows="5" placeholder="数学,一次関数・図形,高め&#10;英語,単語・文法,ふつう&#10;理科,電流,高め"></textarea>
+ <p class="note">優先度は「高め」「ふつう」「低め」が目安です。計画を作ると、課題一覧に追加されます。</p>
+ <button class="primary" id="makePlan">計画を自動作成</button>
+ <p id="planMessage" class="note"></p></div>
+</section>
+<section id="tasks" class="page">
+ <div class="card"><h2>課題を追加</h2><div class="row"><div><label>教科</label><input id="newSubject" placeholder="数学"></div><div><label>課題</label><input id="newTitle" placeholder="問題集 p.10〜12"></div></div>
+ <div class="row"><div><label>予定日</label><input type="date" id="newDate"></div><div><label>目安時間（分）</label><input type="number" id="newMinutes" value="25" min="5"></div></div><p><button class="primary" id="addTask">課題を追加</button></p></div>
+ <div class="card"><h2>課題一覧</h2><div id="taskList"></div></div>
+</section>
+<section id="timer" class="page">
+ <div class="card"><h2>学習タイマー</h2><div class="row"><button class="secondary preset" data-min="25">25分</button><button class="secondary preset" data-min="50">50分</button><button class="secondary preset" data-min="0">ストップウォッチ</button></div>
+ <div class="bigtime" id="clock">25:00</div><p style="text-align:center"><span class="pill" id="timerMode">25分タイマー</span></p>
+ <div class="row"><button class="primary" id="startTimer">スタート</button><button class="secondary" id="pauseTimer">一時停止</button><button class="secondary" id="resetTimer">リセット</button></div>
+ <label>教科（任意）</label><input id="timerSubject" placeholder="例：数学"><p class="note" id="timerMessage">勉強を始めるときにスタートを押してください。</p></div>
+</section>
+<section id="stats" class="page">
+ <div class="card"><h2>学習記録</h2><div class="stats"><div class="stat"><strong id="totalMinutes">0</strong><span>合計分</span></div><div class="stat"><strong id="totalSessions">0</strong><span>学習回数</span></div><div class="stat"><strong id="totalTasks">0</strong><span>完了課題</span></div></div></div>
+ <div class="card"><h2>教科別の学習時間</h2><div id="subjectStats"></div></div>
+ <div class="card"><h2>最近の記録</h2><div id="recentLogs"></div></div>
+</section>
+<section id="settings" class="page">
+ <div class="card"><h2>設定・データ</h2><p class="note">このアプリの課題や学習記録は、利用している端末・ブラウザ内に保存されます。クラスメイトの記録と混ざることはありません。同じ端末を共有するときは注意してください。</p>
+ <button class="secondary" id="exportData">データをJSONで書き出す</button>
+ <label>データの読み込み</label><input type="file" id="importFile" accept=".json,application/json">
+ <p><button class="danger" id="clearData">すべてのデータを削除</button></p>
+ <p class="note">アカウント登録・クラウド同期・プッシュ通知はありません。別の端末に自動で記録を引き継ぐことはできません。</p></div>
+</section>
+</main><footer>StudyFlow · Your study, your flow.</footer>
+<script>
+const $=id=>document.getElementById(id);
+const today=()=>new Date().toISOString().slice(0,10);
+let data=JSON.parse(localStorage.getItem('studyflow_data')||'{"tasks":[],"logs":[]}');
+function save(){localStorage.setItem('studyflow_data',JSON.stringify(data));render()}
+function mins(n){return Math.round(n||0)}
+function render(){
+ const tasks=data.tasks||[],logs=data.logs||[];
+ const todays=tasks.filter(t=>t.date===today()),done=todays.filter(t=>t.done).length;
+ $('todayMinutes').textContent=logs.filter(l=>l.date===today()).reduce((s,l)=>s+l.minutes,0);
+ $('todayDone').textContent=done;$('remaining').textContent=tasks.filter(t=>!t.done).length;
+ $('todayTasks').innerHTML=todays.length?todays.map(taskHTML).join(''):'<div class="empty">今日の課題はありません。自動計画か課題追加から登録できます。</div>';
+ $('taskList').innerHTML=tasks.length?tasks.slice().sort((a,b)=>a.date.localeCompare(b.date)).map(taskHTML).join(''):'<div class="empty">まだ課題がありません。</div>';
+ const total=logs.reduce((s,l)=>s+l.minutes,0);$('totalMinutes').textContent=total;$('totalSessions').textContent=logs.length;$('totalTasks').textContent=tasks.filter(t=>t.done).length;
+ const subjects={};logs.forEach(l=>subjects[l.subject||'その他']=(subjects[l.subject||'その他']||0)+l.minutes);
+ $('subjectStats').innerHTML=Object.keys(subjects).length?Object.entries(subjects).sort((a,b)=>b[1]-a[1]).map(([s,m])=>`<p><b>${esc(s)}</b>　${m}分</p><div class="bar"><i style="width:${Math.max(3,m/Math.max(...Object.values(subjects))*100)}%"></i></div>`).join(''):'<div class="empty">学習記録はまだありません。</div>';
+ $('recentLogs').innerHTML=logs.length?logs.slice(-8).reverse().map(l=>`<div class="task"><div class="info"><b>${esc(l.subject||'その他')}</b><br><small>${l.date} · ${l.minutes}分</small></div></div>`).join(''):'<div class="empty">記録はまだありません。</div>';
+}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function taskHTML(t){return `<div class="task ${t.done?'done':''}"><input type="checkbox" ${t.done?'checked':''} onchange="toggleTask('${t.id}')"><div class="info"><b>${esc(t.title)}</b><br><small>${esc(t.subject)} · ${t.date} · 約${t.minutes}分</small></div><button class="danger" onclick="deleteTask('${t.id}')">削除</button></div>`}
+window.toggleTask=id=>{let t=data.tasks.find(x=>x.id===id);if(t)t.done=!t.done;save()};
+window.deleteTask=id=>{data.tasks=data.tasks.filter(x=>x.id!==id);save()};
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id===b.dataset.page));render()});
+$('addTask').onclick=()=>{let subject=$('newSubject').value.trim(),title=$('newTitle').value.trim();if(!title){alert('課題名を入力してください');return}data.tasks.push({id:crypto.randomUUID(),subject:subject||'その他',title,date:$('newDate').value||today(),minutes:Math.max(5,+$('newMinutes').value||25),done:false});$('newTitle').value='';save()};
+const dayNames=['日','月','火','水','木','金','土'];
+$('weekdayChoices').innerHTML=dayNames.map((d,i)=>`<label><input type="checkbox" value="${i}" ${i!==0?'checked':''}>${d}</label>`).join('');
+$('targetDate').value=new Date(Date.now()+14*86400000).toISOString().slice(0,10);
+$('makePlan').onclick=()=>{
+ const target=new Date($('targetDate').value+'T12:00:00'),start=new Date();start.setHours(12,0,0,0);
+ if(!Number.isFinite(target.getTime())||target<start){$('planMessage').textContent='目標日は今日以降の日付にしてください。';return}
+ const selected=[...$('weekdayChoices').querySelectorAll('input:checked')].map(x=>+x.value);
+ if(!selected.length){$('planMessage').textContent='勉強する曜日を1つ以上選んでください。';return}
+ const lines=$('subjects').value.split('\n').map(x=>x.trim()).filter(Boolean).map(line=>{let p=line.split(',');return {subject:p[0]?.trim()||'その他',range:p[1]?.trim()||'学習',priority:p[2]?.trim()||'ふつう'}});
+ if(!lines.length){$('planMessage').textContent='教科・範囲を1行以上入力してください。';return}
+ const daily=Math.max(10,+$('daily').value||60),session=Math.max(10,+$('session').value||25);
+ let dates=[];for(let d=new Date(start);d<=target;d.setDate(d.getDate()+1)){if(selected.includes(d.getDay()))dates.push(new Date(d))}
+ if(!dates.length){$('planMessage').textContent='選んだ曜日に該当する日がありません。';return}
+ let made=0,idx=0;
+ dates.forEach(d=>{let count=Math.max(1,Math.floor(daily/session));for(let j=0;j<count;j++){let item=lines[idx%lines.length];data.tasks.push({id:crypto.randomUUID(),subject:item.subject,title:item.range+'（'+(item.priority==='高め'?'優先':'学習')+'）',date:d.toISOString().slice(0,10),minutes:session,done:false});idx++;made++}});
+ save();$('planMessage').textContent=`${made}件の課題を追加しました。課題一覧で確認できます。`;
+};
+let mode=25,remaining=1500,elapsed=0,running=false,interval=null;
+function showClock(){let n=mode===0?elapsed:remaining;$('clock').textContent=String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0')}
+function setMode(m){stopClock();mode=m;remaining=m*60;elapsed=0;$('timerMode').textContent=m?m+'分タイマー':'ストップウォッチ';showClock()}
+function stopClock(){running=false;if(interval)clearInterval(interval);interval=null}
+document.querySelectorAll('.preset').forEach(b=>b.onclick=()=>setMode(+b.dataset.min));
+$('startTimer').onclick=()=>{if(running)return;running=true;interval=setInterval(()=>{if(mode===0)elapsed++;else if(remaining>0)remaining--;else{stopClock();finishSession();return}showClock()},1000);$('timerMessage').textContent='学習中です。終わったら一時停止またはリセットしてください。'};
+$('pauseTimer').onclick=()=>{stopClock();$('timerMessage').textContent='一時停止中です。'};
+$('resetTimer').onclick=()=>{stopClock();remaining=mode*60;elapsed=0;showClock();$('timerMessage').textContent='タイマーをリセットしました。'};
+function finishSession(){finishSessionLog(mode*60)}
+function finishSessionLog(seconds){let m=Math.floor(seconds/60);if(m>0){data.logs.push({date:today(),minutes:m,subject:$('timerSubject').value.trim()||'その他'});save()}$('timerMessage').textContent='おつかれさまでした！学習記録を保存しました。'}
+$('exportData').onclick=()=>{let blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='studyflow-data.json';a.click();URL.revokeObjectURL(a.href)};
+$('importFile').onchange=async e=>{let f=e.target.files[0];if(!f)return;try{let d=JSON.parse(await f.text());if(!Array.isArray(d.tasks)||!Array.isArray(d.logs))throw 0;data=d;save();alert('データを読み込みました')}catch(_){alert('ファイルを読み込めませんでした')}};
+$('clearData').onclick=()=>{if(confirm('課題と学習記録をすべて削除しますか？')){data={tasks:[],logs:[]};save()}};
+render();setMode(25);
+</script>
+</body></html>
